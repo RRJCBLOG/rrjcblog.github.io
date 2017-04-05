@@ -1,0 +1,96 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/theme/css/foundation.min.css" media="all">
+        <script type="text/javascript" src="/theme/js/modernizr.js"></script>
+        <link href='https://fonts.googleapis.com/css?family=Exo+2:400,300,700,300italic,400italic,700italic,900,900italic' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="/theme/css/lamboz.css" media="all">
+        <title>人人聚财技术团队</title>
+        <meta charset="utf-8" />
+        
+</head>
+<body>
+    <div class="pages">
+        <ul>
+            <li class="home"><a href="/index.html">首页</a></li>
+        </ul>
+    </div>
+<div class="hp-header-inner">
+    <div class="page-header">
+        <div class="content-header">
+            <div id="title-block">
+                <h1>Articles tagged with 内核漏洞 </h1>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="content">
+        <div class="data-holder">
+        <div class="row">
+           <div class="large-10 content-column column">
+
+
+
+
+
+<blocks cols="2">
+        <div class="sec-article">
+            <div class="read-more">Fri 31 March 2017</div>
+
+            <h3><a href="/linux/k.html" rel=Bookmark title="Permalink to CVE-2017-2636">CVE-2017-2636</a></h3>
+            <p>
+            <p>又一个古老的Linux内核漏洞被曝光！这次的漏洞可以追溯到2009年，影响的linux发行版包括Red Hat、Debian、Fedora、OpenSUSE和Ubuntu。
+这个Linux漏洞编号为CVE-2017-2636，根据CVSS v3标准漏洞评分为7.8分。漏洞在Linux内核已经存在7年了，它能够让本地无权限的用户获取root权限，或者发动DoS让系统崩溃。
+Positive Technologies的研究员Alexander Popov发现了存在于N_HLDC linux内核驱动的竞争条件问题。
+这个内核驱动负责处理高级数据链路控制（High-Level Data Link Control或简称HDLC）数据。问题导致了double-free漏洞。
+Double Free其实就是同一个指针free两次。虽然一般把它叫做double free，其实只要是free一个指向堆内存的指针都有可能产生可以利用的漏洞。
+“这是CVE-2017-2636的声明，该漏洞即N_HLDC (drivers/tty/n_hdlc.c) linux内核驱动中的竞争条件。这个漏洞可以用来进行本地提权。”SecList的安全公告提到。
+“该驱动提供HDLC串行线路规程，这是很多linux发行版中的内核模块——只要是内核设置中有CONFIG_N_HDLC=m的linux发行版。要利用这个漏洞不需要Microgate或者SyncLink硬件。当没有权限的用户打开伪终端并且调用TIOCSETD ioctl函数设置HDLC串行线路规程的时候，模块就会自动加载。”
+因此未经授权的攻击者可以利用这个漏洞注入执行任意代码。
+影响范围
+这个漏洞影响的范围涵盖大多数主流的Linux发行版 …</p>            
+            </p>
+        </div>
+
+</blocks>
+
+            </div>
+            <div class="large-2 aside column">
+                <h3>Links</h3>
+                <ul>
+                    <li><a href="http://www.rrjc.com/">人人聚财官网</a></li>
+                </ul>
+            </div>
+         </div>
+    </div>
+</div>
+    <div class="footer">
+        <div class="data-holder">
+        <div class="row">
+            <div class="large-3 column">
+<div class="credits">
+</div>           </div>
+           <div class="large-6 tag-cloud column">
+                <h3>Tags</h3>
+                <ul>
+                    <li><a href="/tag/jie-shao.html">介绍</a>(1)</li>
+                    <li class="active"><a href="/tag/nei-he-lou-dong.html">内核漏洞</a>(1)</li>
+                    <li><a href="/tag/ren-ren-ju-cai.html">人人聚财</a>(1)</li>
+                    <li><a href="/tag/hdlc.html">HDLC</a>(1)</li>
+                </ul>
+            </div>
+            <div class="large-3 category-column column">
+                <h3>Categories</h3>
+                <ul>
+                    <li><a href="/jie-shao/index.html">介绍</a> (1)</li>
+                    <li><a href="/linux/index.html">Linux</a> (1)</li>
+                </ul>
+             
+            </div>
+        </row>
+        </div>
+    </div>
+</body>
+</html>
