@@ -10,3 +10,4 @@ Tag: 标签1, 标签2
 内容
 
 file extensions end with .md
+bye bye
