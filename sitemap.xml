@@ -5,23 +5,30 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
 <loc>/</loc>
-<lastmod>2017-04-05T18:02:22-00:00</lastmod>
+<lastmod>2017-04-06T09:27:18-00:00</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
 
 <url>
 <loc>/archives.html</loc>
-<lastmod>2017-04-05T18:02:22-00:00</lastmod>
+<lastmod>2017-04-06T09:27:18-00:00</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
 
 <url>
 <loc>/categories.html</loc>
-<lastmod>2017-04-05T18:02:22-00:00</lastmod>
+<lastmod>2017-04-06T09:27:18-00:00</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
+</url>
+
+<url>
+<loc>/gao-ke-yong-jia-gou/API限流.html</loc>
+<lastmod>2017-04-06T09:30:00+08:00</lastmod>
+<changefreq>monthly</changefreq>
+<priority>0.7</priority>
 </url>
 
 <url>
@@ -46,6 +53,13 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 </url>
 
 <url>
+<loc>/gao-ke-yong-jia-gou/index.html</loc>
+<lastmod>2017-04-06T09:30:00+08:06</lastmod>
+<changefreq>daily</changefreq>
+<priority>0.5</priority>
+</url>
+
+<url>
 <loc>/jie-shao/index.html</loc>
 <lastmod>2017-04-01T09:30:00+08:06</lastmod>
 <changefreq>daily</changefreq>
@@ -62,20 +76,6 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
 <loc>/python/index.html</loc>
 <lastmod>2017-04-05T12:20:00+08:06</lastmod>
-<changefreq>daily</changefreq>
-<priority>0.5</priority>
-</url>
-
-<url>
-<loc>/tag/jie-shao.html</loc>
-<lastmod>2017-04-01T09:30:00+08:06</lastmod>
-<changefreq>daily</changefreq>
-<priority>0.5</priority>
-</url>
-
-<url>
-<loc>/tag/nei-he-lou-dong.html</loc>
-<lastmod>2017-03-31T09:30:00+08:06</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>
@@ -102,6 +102,27 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 </url>
 
 <url>
+<loc>/tag/jie-shao.html</loc>
+<lastmod>2017-04-01T09:30:00+08:06</lastmod>
+<changefreq>daily</changefreq>
+<priority>0.5</priority>
+</url>
+
+<url>
+<loc>/tag/nei-he-lou-dong.html</loc>
+<lastmod>2017-03-31T09:30:00+08:06</lastmod>
+<changefreq>daily</changefreq>
+<priority>0.5</priority>
+</url>
+
+<url>
+<loc>/tag/apixian-liu.html</loc>
+<lastmod>2017-04-06T09:30:00+08:06</lastmod>
+<changefreq>daily</changefreq>
+<priority>0.5</priority>
+</url>
+
+<url>
 <loc>/author/hugo.html</loc>
 <lastmod>2017-04-01T09:30:00+08:06</lastmod>
 <changefreq>daily</changefreq>
@@ -110,7 +131,7 @@ xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
 <loc>/author/yzm.html</loc>
-<lastmod>2017-04-05T12:20:00+08:06</lastmod>
+<lastmod>2017-04-06T09:30:00+08:06</lastmod>
 <changefreq>daily</changefreq>
 <priority>0.5</priority>
 </url>

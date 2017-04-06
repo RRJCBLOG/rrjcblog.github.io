@@ -1,0 +1,119 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/theme/css/foundation.min.css" media="all">
+        <script type="text/javascript" src="/theme/js/modernizr.js"></script>
+        <link href='https://fonts.googleapis.com/css?family=Exo+2:400,300,700,300italic,400italic,700italic,900,900italic' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="/theme/css/lamboz.css" media="all">
+        <title>API限流设计 - 人人聚财技术团队</title>
+        <meta name="author" content="RRJC"/>
+        <meta charset="utf-8" />
+        
+</head>
+<body>
+    <div class="pages">
+        <ul>
+            <li class="home"><a href="/index.html">首页</a></li>
+        </ul>
+    </div>
+<div class="hp-header-inner">
+    <div class="page-header">
+        <div class="content-header">
+            <div id="title-block">
+            <h1>  <a href="/gao-ke-yong-jia-gou/API限流.html" rel="bookmark"
+                    title="Permalink to API限流设计">API限流设计</a></h1>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="content">
+        <div class="data-holder">
+        <div class="row">
+           <div class="large-10 content-column column">
+<div class="content-article">
+    <header class="header-article">
+        <div class="read-more">Posted on Thu 06 April 2017</div>
+ 
+   </header>
+    <section class='article'>
+        
+    
+        <div class="entry-content">
+            <h2></h2>
+<p>最初发生这种情况时，对基础架构进行扩容以适应增长是合理的。 但是在 API 服务生产环境中，需要针对具体规模来进行设计和构建，并确保任何坏因素不会影响其可用性。</p>
+<p>限制流量可以使 API 服务在下面的场景中更可靠：</p>
+<p>某个用户直接或间接造成了流量飙升，我们需要确保对其他用户服务可用。
+某个用户向 API 服务发送大量请求。 或者更糟的是，某个用户试图恶意冲垮服务器。
+用户发送了大量低优先级请求，但我们希望确保不会影响其他高优先级请求。 例如，发送大量分析数据请求的用户可能会影响其他用户的关键事务。
+系统内部产生错误，导致无法处理所有请求，不得不丢弃低优先级的请求。</p>
+<p>在 Stripe，通过细致的设计和实现一些限流策略，保障了我们的 API 服务对所有用户的可用性。在这篇文章中，我们将详细介绍这些限流策略、如何对 API 请求进行优先级划分，以及如何安全地使用限流器而不影响现有用户的工作流程。</p>
+<p>限流器和负载降级</p>
+<p>限流器用于控制在网络上发送或接收的流量速率。什么时候应该使用限流器？If your users can afford to change the pace at which they hit your API endpoints without affecting the outcome of their requests（小编：这句话翻译起来太拗口了，小编的理解限流首先是保护服务提供方，然后不会伤害正常的服务使用方），那么使用限速器就是合适的。如果在请求与请求之间插入间隔不可行，比如对于实时通信场景，那么则需要另外的策略（这超出了此文章的范围，但通常来说需要对基础设施扩容）。</p>
+<p>用户可以产生很多请求：例如，批处理支付请求会导致 API 流量持续升高。用户总是可以扩展他们的请求，而不受限流器的影响。</p>
+<p>限流器对于大部分使用场景是十分高效的，但有时我们需要完全丢弃低优先级的请求，以确保更多关键请求的处理，这称为负载降级（load shedder）。</p>
+<p>负载降级可以根据系统的整体状态而不是正在请求的用户来进行决策。它可以帮助我们应对突发事件，确保核心部分正常工作。</p>
+<p>使用不同类型的限流器</p>
+<p>我们应该根据场景决定使用何种限流器，以确保其最大程度提高 API 服务的可靠性。</p>
+<p>在 Stripe，我们在生产环境中使用4种不同类型的限流器。 第一种，请求限流器，它也是最重要的一个。</p>
+<p>请求限流器</p>
+<p>该限流器限制每个用户每秒可发送 N 个请求。</p>
+<p>我们的请求限流器在本月已经拒绝了数百万个请求，特别是对于用户无意运行脚本产生的测试请求。</p>
+<p>我们的 API 在测试和生产模式下提供相同的速率/流量限制行为。 这样做有利于开发人员的体验：在从开发切换到生产模式时，程序或脚本不会遇到副作用。</p>
+<p>在分析了我们的流量模式之后，我们为请求限流器增加了适应请求激增的能力，比如用于电商中的抢购。</p>
+        </div>
+    </section>
+    <footer class="footer-article">
+        <div class="tags-and-categories">Filed under <a href="/gao-ke-yong-jia-gou/index.html">高可用架构</a>
+        | Tagged: <a href="/tag/apixian-liu.html">API限流 </a>
+        | <a href="/gao-ke-yong-jia-gou/API限流.html" rel="bookmark"
+         title="Permalink to API限流设计">Permalink</a>            
+        </div>
+        <!-- metaldata 
+        -->
+    </footer>
+    <!-- disqus  -->
+</div>
+            </div>
+            <div class="large-2 aside column">
+                <h3>Links</h3>
+                <ul>
+                    <li><a href="http://www.rrjc.com/">人人聚财官网</a></li>
+                </ul>
+            </div>
+         </div>
+    </div>
+</div>
+    <div class="footer">
+        <div class="data-holder">
+        <div class="row">
+            <div class="large-3 column">
+<div class="credits">
+</div>           </div>
+           <div class="large-6 tag-cloud column">
+                <h3>Tags</h3>
+                <ul>
+                    <li><a href="/tag/markdown.html">markdown</a>(1)</li>
+                    <li><a href="/tag/ren-ren-ju-cai.html">人人聚财</a>(1)</li>
+                    <li><a href="/tag/hdlc.html">HDLC</a>(1)</li>
+                    <li><a href="/tag/jie-shao.html">介绍</a>(1)</li>
+                    <li><a href="/tag/nei-he-lou-dong.html">内核漏洞</a>(1)</li>
+                    <li><a href="/tag/apixian-liu.html">API限流</a>(1)</li>
+                </ul>
+            </div>
+            <div class="large-3 category-column column">
+                <h3>Categories</h3>
+                <ul>
+                    <li class="active"><a href="/gao-ke-yong-jia-gou/index.html">高可用架构</a> (1)</li>
+                    <li><a href="/jie-shao/index.html">介绍</a> (1)</li>
+                    <li><a href="/linux/index.html">Linux</a> (1)</li>
+                    <li><a href="/python/index.html">Python</a> (1)</li>
+                </ul>
+             
+            </div>
+        </row>
+        </div>
+    </div>
+</body>
+</html>
