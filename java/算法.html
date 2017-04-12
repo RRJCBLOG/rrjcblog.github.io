@@ -1,0 +1,211 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/theme/css/foundation.min.css" media="all">
+        <script type="text/javascript" src="/theme/js/modernizr.js"></script>
+        <link href='https://fonts.googleapis.com/css?family=Exo+2:400,300,700,300italic,400italic,700italic,900,900italic' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="/theme/css/lamboz.css" media="all">
+        <title>分布式UUID算法snowflake - 人人聚财技术团队</title>
+        <meta name="author" content="RRJC"/>
+        <meta charset="utf-8" />
+        
+</head>
+<body>
+    <div class="pages">
+        <ul>
+            <li class="home"><a href="/index.html">首页</a></li>
+        </ul>
+    </div>
+<div class="hp-header-inner">
+    <div class="page-header">
+        <div class="content-header">
+            <div id="title-block">
+            <h1>  <a href="/java/算法.html" rel="bookmark"
+                    title="Permalink to 分布式UUID算法snowflake">分布式UUID算法snowflake</a></h1>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="content">
+        <div class="data-holder">
+        <div class="row">
+           <div class="large-10 content-column column">
+<div class="content-article">
+    <header class="header-article">
+        <div class="read-more">创作于 ： 2017-04-06 17:30:00</div>
+ 
+   </header>
+    <section class='article'>
+        
+    
+        <div class="entry-content">
+            <h1>分布式UUID算法snowflake</h1>
+<h1>概述</h1>
+<p>分布式系统中，有一些需要使用全局唯一ID的场景，这种时候为了防止ID冲突可以使用36位的UUID，但是UUID有一些缺点，首先他相对比较长，另外UUID一般是无序的，而且不是纯数字的。</p>
+<p>有些时候我们希望能使用一种简单一些的ID，保持纯数字，并且希望ID能够按照时间有序生成。</p>
+<p>而twitter的snowflake解决了这种需求，最初Twitter把存储系统从MySQL迁移到Cassandra，因为Cassandra没有顺序ID生成机制，所以开发了这样一套全局唯一ID生成服务。</p>
+<h4>目前此套算法为我们提供了银行存管中的流水号服务。</h4>
+<h1>结构</h1>
+<p>snowflake的结构如下(每部分用-分开):</p>
+<p>0 - 0000000000 0000000000 0000000000 0000000000 0 - 00000 - 00000 - 000000000000</p>
+<p>第一位为未使用，接下来的41位为毫秒级时间(41位的长度可以使用69年)，然后是5位datacenterId和5位workerId(10位的长度最多支持部署1024个节点） ，最后12位是毫秒内的计数（12位的计数顺序号支持每个节点每毫秒产生4096个ID序号）</p>
+<p>一共加起来刚好64位，为一个Long型。(转换成字符串长度为18)</p>
+<p>snowflake生成的ID整体上按照时间自增排序，并且整个分布式系统内不会产生ID碰撞（由datacenter和workerId作区分），并且效率较高。snowflake每秒能够产生26万个ID。</p>
+<p>ok, let's shut up , just show me the code!</p>
+<div class="highlight"><pre><span></span><span class="kn">package</span> <span class="nn">com.rrjc.pf.common</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.net.InetAddress</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">org.slf4j.Logger</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.slf4j.LoggerFactory</span><span class="o">;</span>
+
+<span class="cm">/**</span>
+<span class="cm"> *   (a) id构成: 42位的时间前缀 + 10位的节点标识 + 12位的sequence避免并发的数字(12位不够用时强制得到新的时间前缀)</span>
+<span class="cm"> *       注意这里进行了小改动: snowkflake是5位的datacenter加5位的机器id; 这里变成使用10位的机器id</span>
+<span class="cm"> *   (b) 对系统时间的依赖性非常强，需关闭ntp的时间同步功能。当检测到ntp时间调整后，将会拒绝分配id</span>
+<span class="cm"> */</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">IdWorker</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kd">static</span> <span class="n">Logger</span> <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerFactory</span><span class="o">.</span><span class="na">getLogger</span><span class="o">(</span><span class="n">IdWorker</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">workerId</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">epoch</span> <span class="o">=</span> <span class="mi">1403854494756L</span><span class="o">;</span>   <span class="c1">// 时间起始标记点，作为基准，一般取系统的最近时间</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">workerIdBits</span> <span class="o">=</span> <span class="mi">10L</span><span class="o">;</span>      <span class="c1">// 机器标识位数</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">maxWorkerId</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1L</span> <span class="o">^</span> <span class="o">-</span><span class="mi">1L</span> <span class="o">&lt;&lt;</span> <span class="k">this</span><span class="o">.</span><span class="na">workerIdBits</span><span class="o">;</span><span class="c1">// 机器ID最大值: 1023</span>
+    <span class="kd">private</span> <span class="kt">long</span> <span class="n">sequence</span> <span class="o">=</span> <span class="mi">0</span><span class="n">L</span><span class="o">;</span>                   <span class="c1">// 0，并发控制</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">sequenceBits</span> <span class="o">=</span> <span class="mi">12L</span><span class="o">;</span>      <span class="c1">//毫秒内自增位</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">workerIdShift</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">sequenceBits</span><span class="o">;</span>                             <span class="c1">// 12</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">timestampLeftShift</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">sequenceBits</span> <span class="o">+</span> <span class="k">this</span><span class="o">.</span><span class="na">workerIdBits</span><span class="o">;</span><span class="c1">// 22</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">sequenceMask</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1L</span> <span class="o">^</span> <span class="o">-</span><span class="mi">1L</span> <span class="o">&lt;&lt;</span> <span class="k">this</span><span class="o">.</span><span class="na">sequenceBits</span><span class="o">;</span>                 <span class="c1">// 4095,111111111111,12位</span>
+    <span class="kd">private</span> <span class="kt">long</span> <span class="n">lastTimestamp</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1L</span><span class="o">;</span>
+
+
+
+    <span class="kd">private</span> <span class="nf">IdWorker</span><span class="o">(</span><span class="kt">long</span> <span class="n">workerId</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">workerId</span> <span class="o">&gt;</span> <span class="k">this</span><span class="o">.</span><span class="na">maxWorkerId</span> <span class="o">||</span> <span class="n">workerId</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="n">IllegalArgumentException</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">&quot;worker Id can&#39;t be greater than %d or less than 0&quot;</span><span class="o">,</span> <span class="k">this</span><span class="o">.</span><span class="na">maxWorkerId</span><span class="o">));</span>
+        <span class="o">}</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">workerId</span> <span class="o">=</span> <span class="n">workerId</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">synchronized</span> <span class="kt">long</span> <span class="nf">nextId</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="kt">long</span> <span class="n">timestamp</span> <span class="o">=</span> <span class="n">IdWorker</span><span class="o">.</span><span class="na">timeGen</span><span class="o">();</span>
+        <span class="k">if</span> <span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">lastTimestamp</span> <span class="o">==</span> <span class="n">timestamp</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// 如果上一个timestamp与新产生的相等，则sequence加一(0-4095循环); 对新的timestamp，sequence从0开始</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">sequence</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">sequence</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&amp;</span> <span class="k">this</span><span class="o">.</span><span class="na">sequenceMask</span><span class="o">;</span>
+            <span class="k">if</span> <span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">sequence</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">timestamp</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">tilNextMillis</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">lastTimestamp</span><span class="o">);</span><span class="c1">// 重新生成timestamp</span>
+            <span class="o">}</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">sequence</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="n">timestamp</span> <span class="o">&lt;</span> <span class="k">this</span><span class="o">.</span><span class="na">lastTimestamp</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="na">error</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">&quot;clock moved backwards.Refusing to generate id for %d milliseconds&quot;</span><span class="o">,</span> <span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">lastTimestamp</span> <span class="o">-</span> <span class="n">timestamp</span><span class="o">)));</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="n">Exception</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="s">&quot;clock moved backwards.Refusing to generate id for %d milliseconds&quot;</span><span class="o">,</span> <span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">lastTimestamp</span> <span class="o">-</span> <span class="n">timestamp</span><span class="o">)));</span>
+        <span class="o">}</span>
+
+        <span class="k">this</span><span class="o">.</span><span class="na">lastTimestamp</span> <span class="o">=</span> <span class="n">timestamp</span><span class="o">;</span>
+        <span class="k">return</span> <span class="n">timestamp</span> <span class="o">-</span> <span class="k">this</span><span class="o">.</span><span class="na">epoch</span> <span class="o">&lt;&lt;</span> <span class="k">this</span><span class="o">.</span><span class="na">timestampLeftShift</span> <span class="o">|</span> <span class="k">this</span><span class="o">.</span><span class="na">workerId</span> <span class="o">&lt;&lt;</span> <span class="k">this</span><span class="o">.</span><span class="na">workerIdShift</span> <span class="o">|</span> <span class="k">this</span><span class="o">.</span><span class="na">sequence</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kd">static</span> <span class="n">IdWorker</span> <span class="n">flowIdWorker</span> <span class="o">=</span> <span class="k">new</span> <span class="n">IdWorker</span><span class="o">(</span><span class="n">getworkerHostIp</span><span class="o">());</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">IdWorker</span> <span class="nf">getFlowIdWorkerInstance</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">flowIdWorker</span><span class="o">;</span>
+    <span class="o">}</span>
+
+
+
+    <span class="cm">/**</span>
+<span class="cm">     * 等待下一个毫秒的到来, 保证返回的毫秒数在参数lastTimestamp之后</span>
+<span class="cm">     */</span>
+    <span class="kd">private</span> <span class="kt">long</span> <span class="nf">tilNextMillis</span><span class="o">(</span><span class="kt">long</span> <span class="n">lastTimestamp</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kt">long</span> <span class="n">timestamp</span> <span class="o">=</span> <span class="n">IdWorker</span><span class="o">.</span><span class="na">timeGen</span><span class="o">();</span>
+        <span class="k">while</span> <span class="o">(</span><span class="n">timestamp</span> <span class="o">&lt;=</span> <span class="n">lastTimestamp</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">timestamp</span> <span class="o">=</span> <span class="n">IdWorker</span><span class="o">.</span><span class="na">timeGen</span><span class="o">();</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">timestamp</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="cm">/**</span>
+<span class="cm">     * 获得系统当前毫秒数</span>
+<span class="cm">     */</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kt">long</span> <span class="nf">timeGen</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="cm">/**</span>
+<span class="cm">     *</span>
+<span class="cm">     * @param bytes</span>
+<span class="cm">     * @return int</span>
+<span class="cm">     */</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">getworkerHostIp</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span> <span class="o">=</span> <span class="n">InetAddress</span><span class="o">.</span><span class="na">getLocalHost</span><span class="o">().</span><span class="na">getAddress</span><span class="o">();</span>
+            <span class="k">return</span> <span class="n">Integer</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">bytes</span><span class="o">[</span><span class="mi">3</span><span class="o">]</span> <span class="o">&amp;</span> <span class="mh">0xFF</span><span class="o">);</span> 
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="na">error</span><span class="o">(</span><span class="n">e</span><span class="o">.</span><span class="na">getMessage</span><span class="o">(),</span><span class="n">e</span><span class="o">);</span>
+            <span class="k">return</span> <span class="mi">1</span><span class="o">;</span>
+        <span class="o">}</span>
+
+    <span class="o">}</span>
+
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="n">IdWorker</span> <span class="n">idWorker</span> <span class="o">=</span> <span class="n">IdWorker</span><span class="o">.</span><span class="na">getFlowIdWorkerInstance</span><span class="o">();</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">idWorker</span><span class="o">.</span><span class="na">nextId</span><span class="o">());</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">idWorker</span><span class="o">.</span><span class="na">nextId</span><span class="o">());</span>
+    <span class="o">}</span>
+
+<span class="o">}</span>
+</pre></div>
+
+
+<p><strong>经5万的并发，亦不会有重复的id出现。</strong></p>
+        </div>
+    </section>
+    <footer class="footer-article">
+        <div class="tags-and-categories">类别:  <a href="/java/index.html">Java</a>
+        | 标签: <a href="/tag/suan-fa.html">算法 </a>       
+        </div>
+        <!-- metaldata 
+        -->
+    </footer>
+    <!-- disqus  -->
+</div>
+            </div>
+            <div class="large-2 aside column">
+                <h3></h3>
+                <ul>
+                    <li><a href="http://www.rrjc.com/">人人聚财官网</a></li>
+                </ul>
+            </div>
+         </div>
+    </div>
+</div>
+    <div class="footer">
+        <div class="data-holder">
+        <div class="row">
+            <div class="large-3 column">
+<div class="credits">
+</div>           </div>
+           <div class="large-6 tag-cloud column">
+                <h3>标签</h3>
+                <ul>
+                    <li><a href="/tag/suan-fa.html">算法</a>(1)</li>
+                </ul>
+            </div>
+            <div class="large-3 category-column column">
+                <h3>类别</h3>
+                <ul>
+                    <li class="active"><a href="/java/index.html">Java</a> (1)</li>
+                </ul>
+             
+            </div>
+        </row>
+        </div>
+    </div>
+</body>
+</html>
