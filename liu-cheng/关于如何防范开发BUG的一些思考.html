@@ -1,0 +1,107 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/theme/css/foundation.min.css" media="all">
+        <script type="text/javascript" src="/theme/js/modernizr.js"></script>
+        <link href='https://fonts.googleapis.com/css?family=Exo+2:400,300,700,300italic,400italic,700italic,900,900italic' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="/theme/css/lamboz.css" media="all">
+        <title>关于如何防范开发BUG的一些思考 - 人人聚财技术团队</title>
+        <meta name="author" content="RRJC"/>
+        <meta charset="utf-8" />
+        
+</head>
+<body>
+    <div class="pages">
+        <ul>
+            <li class="home"><a href="/index.html">首页</a></li>
+        </ul>
+    </div>
+<div class="hp-header-inner">
+    <div class="page-header">
+        <div class="content-header">
+            <div id="title-block">
+            <h1>  <a href="/liu-cheng/关于如何防范开发BUG的一些思考.html" rel="bookmark"
+                    title="Permalink to 关于如何防范开发BUG的一些思考">关于如何防范开发BUG的一些思考</a></h1>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="content">
+        <div class="data-holder">
+        <div class="row">
+           <div class="large-10 content-column column">
+<div class="content-article">
+    <header class="header-article">
+        <div class="read-more">创作于 ： 2017-04-13 10:30:00</div>
+ 
+   </header>
+    <section class='article'>
+        
+    
+        <div class="entry-content">
+            <h1>关于如何防范开发BUG的一些思考</h1>
+<p>​        由于前几次上线我们开发这边犯了出现了些重大BUG，而且这些BUG中有些是完全可以避免的；就以前出现的这些bug我总结了一下几点来防范于未然，从而来降低我们线上bug率。</p>
+<ol>
+<li>在设计参与讨论，提出一些需要程序员自测时候可能会忘记 测试 的点，此外，PM或者QA往往对业务更熟悉，可以提供建议给程序员，那些业务细节不能够忽视，以防止这些地方出现 bug 。</li>
+<li>程序员在开发过程中要尽量遵循内部代码开发规范；例如: 在开发中对于存在异常的接口、代码块一定要用try catch 捕捉异常。</li>
+<li>程序员在开发时需要明确自己所开发的业务是需要在主线还是分支开发，不明确的可以向自己的项目负责人询问。</li>
+<li>程序员在开发过程中坚决不能注释原有代码，除非是自己开发的业务需要。</li>
+<li>对模块进行单元测试：遵循测试-代码-测试的原理，写一些成功或失败的案例帮助你识别函数所有可能的输入和代码相应的处理，尽量达到单元测试覆盖率在80%以上。</li>
+<li>在提交代码的过程中首先要检查一下自己所提交的代码，其次可以让同组的同事来帮你检查代码，确保代码没有问题后再提交，提交时添加注释来说明本次代码改动的内容。</li>
+<li>我如果碰到了一些比较有趣或者通用的bug，会在团队的每天站会，或者群里面跟大家分享，这样大家都会知道这种类型的bug。</li>
+<li>提测过程中一定要在邮件中说明本次提测内容以及测试重点，这样方便测试人员去执行测试范围。</li>
+<li>使用检测工具来分析自己编写的代码，例如：在java中使用 Findbugs来静态分析代码找出bug。</li>
+<li>上线负责人审查代码，上预发布环境时需要负责人进行code review 。</li>
+<li>上线负责人在上预发布环境和线上环境时需要通知所有的开发人员，开发人员需要确认自己有没有在本次版本中改动代码。</li>
+<li>非工作日和法定节假日前一天坚决不上线，这时候上线不利于跟踪问题。</li>
+<li>上线后需要执行一套测试流程，对于一些常用业务、容易出现bug的业务进行优先级排序，按优先级逐一进线上测试。</li>
+</ol>
+        </div>
+    </section>
+    <footer class="footer-article">
+        <div class="tags-and-categories">类别:  <a href="/liu-cheng/index.html">流程</a>
+        | 标签: <a href="/tag/java.html">java </a>       
+        </div>
+        <!-- metaldata 
+        -->
+    </footer>
+    <!-- disqus  -->
+</div>
+            </div>
+            <div class="large-2 aside column">
+                <h3></h3>
+                <ul>
+                    <li><a href="http://www.rrjc.com/">人人聚财官网</a></li>
+                </ul>
+            </div>
+         </div>
+    </div>
+</div>
+    <div class="footer">
+        <div class="data-holder">
+        <div class="row">
+            <div class="large-3 column">
+<div class="credits">
+</div>           </div>
+           <div class="large-6 tag-cloud column">
+                <h3>标签</h3>
+                <ul>
+                    <li><a href="/tag/suan-fa.html">算法</a>(1)</li>
+                    <li><a href="/tag/java.html">java</a>(1)</li>
+                </ul>
+            </div>
+            <div class="large-3 category-column column">
+                <h3>类别</h3>
+                <ul>
+                    <li><a href="/java/index.html">Java</a> (1)</li>
+                    <li class="active"><a href="/liu-cheng/index.html">流程</a> (1)</li>
+                </ul>
+             
+            </div>
+        </row>
+        </div>
+    </div>
+</body>
+</html>
